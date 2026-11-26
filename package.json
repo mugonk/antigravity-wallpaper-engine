@@ -1,0 +1,19 @@
+{
+  "name": "antigravity-wallpaper-engine",
+  "version": "1.0.0",
+  "description": "Wallpaper Engine & Liquid Glass adaptation for Antigravity 2.0 (adapted from elysia395/dsh-wallpaper-engine)",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "webwallgl": "^3.0.0"
+  },
+  "scripts": {
+    "build": "node runtime/bundle-renderer.mjs",
+    "test": "node test/verify.mjs",
+    "status": "node scripts/status.mjs",
+    "sync": "node scripts/sync-to-plugin.mjs"
+  }
+}

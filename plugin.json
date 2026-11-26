@@ -1,0 +1,13 @@
+{
+  "name": "antigravity-wallpaper-engine",
+  "displayName": "Antigravity 壁纸引擎 (Wallpaper Engine)",
+  "description": "把本机 Wallpaper Engine 的 Scene / Web / Video / 图片壁纸无缝带进 Antigravity 2.0 对话界面，配备 iOS 液态玻璃外观、点击拖尾特效、3D 视差、自定义字体与性能监控悬浮窗，零 Agent token 开销，与汉化插件安全共存。",
+  "version": "1.0.0",
+  "author": "Adapted from elysia395/dsh-wallpaper-engine",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "检查当前 Antigravity 壁纸引擎插件的运行状态与壁纸库扫描结果",
+    "查看如何安装、重启生效或安全卸载壁纸引擎插件",
+    "排查 Scene/Web 壁纸加载或液态玻璃显示问题"
+  ]
+}

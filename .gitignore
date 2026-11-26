@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Runtime & local state
+.heartbeat.json
+*.log
+npm-debug.log*
+server.json
+
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.tmp
+.vscode/
+.idea/
