@@ -16,17 +16,49 @@
 </p>
 
 <p>
-  <a href="#start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-get-dark.png"><img src="assets/readme/nav-get-light.png" alt="快速安装" height="42"></picture></a>&nbsp;
-  <a href="#presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-presets-dark.png"><img src="assets/readme/nav-presets-light.png" alt="液态玻璃预设" height="42"></picture></a>&nbsp;
-  <a href="#formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-formats-dark.png"><img src="assets/readme/nav-formats-light.png" alt="支持格式" height="42"></picture></a>&nbsp;
-  <a href="#faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-faq-dark.png"><img src="assets/readme/nav-faq-light.png" alt="常见问题" height="42"></picture></a>&nbsp;
-  <a href="#credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-credits-dark.png"><img src="assets/readme/nav-credits-light.png" alt="原项目致谢" height="42"></picture></a>
+  <a href="#start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-get-dark.png"><img src="assets/readme/nav-get-light.png" alt="快速安装" height="40"></picture></a>&nbsp;
+  <a href="#showcase"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-showcase-dark.png"><img src="assets/readme/nav-showcase-light.png" alt="效果展示" height="40"></picture></a>&nbsp;
+  <a href="#presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-presets-dark.png"><img src="assets/readme/nav-presets-light.png" alt="液态玻璃预设" height="40"></picture></a>&nbsp;
+  <a href="#formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-formats-dark.png"><img src="assets/readme/nav-formats-light.png" alt="支持格式" height="40"></picture></a>&nbsp;
+  <a href="#faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-faq-dark.png"><img src="assets/readme/nav-faq-light.png" alt="常见问题" height="40"></picture></a>&nbsp;
+  <a href="#credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-credits-dark.png"><img src="assets/readme/nav-credits-light.png" alt="原项目致谢" height="40"></picture></a>
 </p>
 
 </div>
 
 > [!NOTE]
 > **原项目声明**：本项目移植并深度适配自 [`elysia395/dsh-wallpaper-engine`](https://github.com/elysia395/dsh-wallpaper-engine)（`dsh-plugin-wallpaper-engine`），Scene 场景实时渲染引擎由 [`oneincase/webwallgl`](https://github.com/oneincase/webwallgl) 驱动。详细出处与完整致谢请见文末 [原项目出处与致谢](#credits) 章节。
+
+<h2 id="showcase"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-showcase-dark.png"><img src="assets/readme/sec-showcase-light.png" alt="SHOWCASE · 实机效果展示" width="1440"></picture></h2>
+
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="assets/readme/showcase-starlight.jpg"><img src="assets/readme/showcase-starlight.jpg" alt="Antigravity 2.0 星空云海动态壁纸与冰透液态玻璃主界面" width="100%" /></a>
+      <br><b>🌌 主界面实拍 · 星空云海与冰透液态玻璃</b>
+      <br><sub>20px 圆角半透明侧栏、磨砂输入框与右上角 Gemini 吉祥物拉绳，与汉化插件完美共存</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="assets/readme/showcase-sunset.jpg"><img src="assets/readme/showcase-sunset.jpg" alt="Antigravity 2.0 落日壁纸与通透磨砂侧栏效果" width="100%" /></a>
+      <br><b>🌇 主界面实拍 · 落日动态壁纸与背景透光</b>
+      <br><sub>壁纸色彩自然漫反射穿透液态玻璃侧栏与对话输入框，保留高清晰阅读对比度</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="assets/readme/showcase-library.jpg"><img src="assets/readme/showcase-library.jpg" alt="Ctrl + Alt + W 唤起的 3 列冰透壁纸库抽屉与黑胶播放条" width="100%" /></a>
+      <br><b>🎞️ 壁纸库抽屉 · 三列沉浸浏览与黑胶播放条</b>
+      <br><sub>按 <code>Ctrl + Alt + W</code> 或下拉吉祥物即开，直连本机 Steam / WE 创意工坊壁纸</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="assets/readme/showcase-settings.jpg"><img src="assets/readme/showcase-settings.jpg" alt="Antigravity Wallpaper Engine 液态玻璃设置弹窗与吉祥物管理" width="100%" /></a>
+      <br><b>⚙️ 完整设置弹窗 · 吉祥物切换与外观预设导入</b>
+      <br><sub>支持 10 款吉祥物一键切换、自定义立绘上传、省电暂停策略与 JSON 预设导入导出</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub>点击任意图片可查看原尺寸大图；以上均为 Antigravity 2.0 + <code>presets/agy-wallpaper-preset.json</code> 实机运行截图。</sub></p>
 
 <p align="center">
   <picture>

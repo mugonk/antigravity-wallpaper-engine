@@ -911,9 +911,10 @@ def generate_nav_pills(theme_name: str) -> None:
 
     items = [
         ("get", "快速安装", t["primary_fg"], True),
+        ("showcase", "效果展示", t["cyan_bright"] if is_dark else t["cyan"], False),
         ("presets", "液态玻璃预设", t["pink"], False),
-        ("formats", "支持格式", t["cyan_bright"] if is_dark else t["cyan"], False),
-        ("faq", "常见问题", t["indigo"], False),
+        ("formats", "支持格式", t["indigo"], False),
+        ("faq", "常见问题", t["amber"], False),
         ("credits", "原项目致谢", t["emerald"], False),
     ]
 
@@ -972,7 +973,8 @@ def generate_sections(theme_name: str) -> None:
     f_title = font_zh(24, bold=True)
 
     sections = [
-        ("formats", "FORMATS", "支持的壁纸类型", t["cyan_bright"] if is_dark else t["cyan"]),
+        ("showcase", "SHOWCASE", "实机效果展示", t["cyan_bright"] if is_dark else t["cyan"]),
+        ("formats", "FORMATS", "支持的壁纸类型", t["indigo"]),
         ("presets", "PRESETS", "液态玻璃预设与外观分享", t["pink"]),
         ("start", "QUICK START", "快速开始与安装", t["emerald"]),
         ("maintain", "MAINTAIN", "常用维护与安全卸载", t["amber"]),
