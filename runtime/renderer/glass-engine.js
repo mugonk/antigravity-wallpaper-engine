@@ -152,8 +152,7 @@
     let lastHoveredRow = null;
     let lastHoveredRowSig = 0;
     let hoverRaf = null;
-    let veilOpenRaf = null;
-    let veilHideTimer = null;
+    let overlayNavTimer = null;
     let lastSidebarReconcileAt = 0;
     let lastFullScanAt = 0;
 
@@ -412,16 +411,19 @@
       lastSidebarReconcileAt = Date.now();
     }
 
-    function reconcileAllSidebars() {
+    function reconcileAllSidebars(onlySettingsNav = false) {
       if (scanning || !document.body) return;
       const s = store.getSettings();
       const wp = store.getActiveWallpaper();
       if (!(s.enabled && wp)) return;
       scanning = true;
       try {
-        if (lastLeftSidebar && lastLeftSidebar.isConnected) reconcileSidebarRegion(lastLeftSidebar);
-        if (lastRightSidebar && lastRightSidebar.isConnected) reconcileSidebarRegion(lastRightSidebar);
-        if (lastSettingsNav && lastSettingsNav.isConnected) reconcileSidebarRegion(lastSettingsNav);
+        if (hasActiveOverlay || onlySettingsNav) {
+          if (lastSettingsNav && lastSettingsNav.isConnected) reconcileSidebarRegion(lastSettingsNav);
+        } else {
+          if (lastLeftSidebar && lastLeftSidebar.isConnected) reconcileSidebarRegion(lastLeftSidebar);
+          if (lastRightSidebar && lastRightSidebar.isConnected) reconcileSidebarRegion(lastRightSidebar);
+        }
       } finally {
         scanning = false;
       }
@@ -456,33 +458,40 @@
 
     function unwrapCenteredDialogCard(outerEl, vw, vh) {
       const or = outerEl.getBoundingClientRect();
-      // If outerEl covers almost the entire viewport, check if it wraps a centered modal card (50%..95% of viewport)
-      if (or.width >= vw * 0.94 && or.height >= vh * 0.94) {
+      const innerBackdrops = [];
+      // If outerEl covers almost the entire viewport, unwrap wrappers & collect inner empty backdrop siblings
+      if (or.width >= vw * 0.92 && or.height >= vh * 0.92) {
         let cur = outerEl;
-        for (let depth = 0; depth < 3; depth += 1) {
+        for (let depth = 0; depth < 6; depth += 1) {
           const visibleChildren = [];
+          const emptyFullSibs = [];
           for (const ch of cur.children) {
             if (!ch || ch.nodeType !== 1 || isOwnElement(ch) || PRUNE_TAGS.has(ch.tagName)) continue;
             const cr = ch.getBoundingClientRect();
-            if (cr.width >= vw * 0.45 && cr.height >= vh * 0.45 && (ch.textContent || '').trim().length > 10) {
+            const txtLen = (ch.textContent || '').trim().length;
+            if (txtLen === 0 && cr.width >= vw * 0.85 && cr.height >= vh * 0.85) {
+              emptyFullSibs.push(ch);
+            } else if (cr.width >= vw * 0.42 && cr.height >= vh * 0.42 && txtLen > 10) {
               visibleChildren.push({ el: ch, cr });
             }
           }
           if (visibleChildren.length === 1) {
+            for (const b of emptyFullSibs) innerBackdrops.push(b);
             const only = visibleChildren[0];
-            if (only.cr.width < vw * 0.94 || only.cr.height < vh * 0.94) {
-              return { backdropEl: outerEl, dialogEl: only.el };
+            if (only.cr.width < vw * 0.92 || only.cr.height < vh * 0.92) {
+              return { backdropEl: outerEl, innerBackdrops, dialogEl: only.el, dialogRect: only.cr, isFullViewport: false };
             }
             cur = only.el;
           } else {
             break;
           }
         }
+        return { backdropEl: null, innerBackdrops, dialogEl: cur, dialogRect: cur.getBoundingClientRect(), isFullViewport: true };
       }
-      return { backdropEl: null, dialogEl: outerEl };
+      return { backdropEl: null, innerBackdrops, dialogEl: outerEl, dialogRect: or, isFullViewport: false };
     }
 
-    function findFullScreenOverlay(vw, vh) {
+    function findFullScreenOverlay(vw, vh, hintRoots = null) {
       const seen = new Set();
       const candidates = [];
 
@@ -490,15 +499,19 @@
         if (!el || el.nodeType !== 1 || seen.has(el) || isOwnElement(el) || PRUNE_TAGS.has(el.tagName)) return false;
         if (el === document.body || el === document.documentElement || el.id === 'root' || el.id === 'app') return false;
         const r = el.getBoundingClientRect();
-        if (r.width < vw * 0.45 || r.height < vh * 0.45) return false;
+        if (r.width < vw * 0.42 || r.height < vh * 0.42) return false;
 
         const cs = getComputedStyle(el);
-        if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') <= 0.05) return false;
-        if (cs.pointerEvents === 'none') return false;
-        if ((el.textContent || '').trim().length <= 10) return false;
-
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
         const role = (el.getAttribute('role') || '').toLowerCase();
         const isModalAttr = el.tagName === 'DIALOG' || role === 'dialog' || role === 'alertdialog' || el.getAttribute('aria-modal') === 'true';
+        const isOpeningState = el.getAttribute('data-state') === 'open';
+        const op = parseFloat(cs.opacity || '1');
+        // Allow frame-0 fade-in modals (opacity: 0 at mount) when explicitly marked as dialog/open!
+        if (op <= 0.05 && !isModalAttr && !isOpeningState) return false;
+        if (cs.pointerEvents === 'none' && !isModalAttr) return false;
+        if ((el.textContent || '').trim().length <= 10) return false;
+
         const z = parseInt(cs.zIndex, 10);
         const p = el.parentElement;
         const isPortalChild = p === document.body || Boolean(p && p.hasAttribute('data-radix-portal'));
@@ -519,34 +532,66 @@
         return false;
       };
 
-      // 1. Direct query for ARIA/native/Radix/portal dialog modals (bypasses 0x0 portal wrapper bounding boxes!)
+      // Fast path: when triggered by newly inserted DOM nodes, check them and their shallow dialog containers first (O(1)!)
+      if (hintRoots && hintRoots.length) {
+        for (const root of hintRoots) {
+          if (!root || !root.isConnected || isOwnElement(root)) continue;
+          consider(root);
+          if (root.parentElement && root.parentElement !== document.body && root.parentElement.id !== 'root') {
+            consider(root.parentElement);
+          }
+          if (root.querySelectorAll) {
+            const innerModals = root.querySelectorAll('dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"], [data-state="open"]');
+            for (let i = 0; i < innerModals.length && i < 16; i += 1) {
+              consider(innerModals[i]);
+            }
+          }
+          // Check shallow fixed wrapper children (max 2 levels)
+          if (!candidates.length && root.children) {
+            for (let i = 0; i < root.children.length && i < 8; i += 1) {
+              const ch = root.children[i];
+              if (consider(ch)) continue;
+              if (ch && ch.children) {
+                for (let j = 0; j < ch.children.length && j < 8; j += 1) {
+                  consider(ch.children[j]);
+                }
+              }
+            }
+          }
+        }
+        if (candidates.length) {
+          const roots = candidates.filter((c) => !candidates.some((other) => other !== c && other.el.contains(c.el)));
+          roots.sort((a, b) => (b.z - a.z) || (Number(b.isModalAttr) - Number(a.isModalAttr)));
+          return roots[0] || candidates[0];
+        }
+      }
+
+      // 1. Targeted query for ARIA/native/Radix/portal dialog containers (avoid wildcard `*` over hundreds of modal children!)
       const directNodes = document.querySelectorAll(
-        'dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"], [data-radix-portal] *, [data-state="open"]'
+        'dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"], [data-radix-portal] > *, [data-radix-portal] > * > *, [data-state="open"]'
       );
-      for (let i = 0; i < directNodes.length && i < 200; i += 1) {
+      for (let i = 0; i < directNodes.length && i < 48; i += 1) {
         consider(directNodes[i]);
       }
 
-      // 2. Shallow walk from document.body allowing 0x0 / display:contents portal wrappers!
-      const visit = (el, depth) => {
-        if (!el || el.nodeType !== 1 || depth > 7 || isOwnElement(el) || PRUNE_TAGS.has(el.tagName)) return;
-        if (consider(el)) return;
-        const r = el.getBoundingClientRect();
-        // NEVER prune 0x0 or display:contents wrappers (Radix/React portals have 0x0 parent around fixed dialogs!)
-        const mayContainFixed = depth <= 4 || r.width === 0 || r.height === 0 || (r.width >= vw * 0.45 && r.height >= vh * 0.45);
-        if (!mayContainFixed) return;
-        for (let i = 0; i < el.children.length && i < 36; i += 1) {
-          visit(el.children[i], depth + 1);
-        }
-      };
-      if (document.body) {
-        for (let i = 0; i < document.body.children.length && i < 40; i += 1) {
+      // 2. Shallow walk from document.body only if direct modal query found nothing
+      if (!candidates.length && document.body) {
+        const visit = (el, depth) => {
+          if (!el || el.nodeType !== 1 || depth > 5 || isOwnElement(el) || PRUNE_TAGS.has(el.tagName)) return;
+          if (consider(el)) return;
+          const r = el.getBoundingClientRect();
+          const mayContainFixed = depth <= 3 || r.width === 0 || r.height === 0 || (r.width >= vw * 0.42 && r.height >= vh * 0.42);
+          if (!mayContainFixed) return;
+          for (let i = 0; i < el.children.length && i < 24; i += 1) {
+            visit(el.children[i], depth + 1);
+          }
+        };
+        for (let i = 0; i < document.body.children.length && i < 30; i += 1) {
           visit(document.body.children[i], 0);
         }
       }
 
       if (!candidates.length) return null;
-      // Filter out ancestors if a more specific inner candidate isn't needed — prefer outermost overlay root
       const roots = candidates.filter((c) => !candidates.some((other) => other !== c && other.el.contains(c.el)));
       roots.sort((a, b) => (b.z - a.z) || (Number(b.isModalAttr) - Number(a.isModalAttr)));
       return roots[0] || candidates[0];
@@ -554,12 +599,21 @@
 
     function findOverlayStackZ(el) {
       let cur = el;
+      let maxZ = 0;
       while (cur && cur !== document.body && cur !== document.documentElement) {
         const z = parseInt(getComputedStyle(cur).zIndex, 10);
-        if (Number.isFinite(z) && z > 0) return z;
+        if (Number.isFinite(z) && z > maxZ) maxZ = z;
         cur = cur.parentElement;
       }
-      return 0;
+      return maxZ;
+    }
+
+    function findBodyDirectChild(el) {
+      let cur = el;
+      while (cur && cur.parentElement && cur.parentElement !== document.body) {
+        cur = cur.parentElement;
+      }
+      return cur && cur.parentElement === document.body ? cur : null;
     }
 
     function detachOverlayAttrObs() {
@@ -586,7 +640,7 @@
           return;
         }
         const cs = getComputedStyle(dialogEl);
-        if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') <= 0.05) {
+        if (cs.display === 'none' || cs.visibility === 'hidden' || (parseFloat(cs.opacity || '1') <= 0.05 && cs.pointerEvents === 'none')) {
           closeActiveOverlayNow();
         }
       });
@@ -603,6 +657,10 @@
       activeOverlayDialogEl = null;
       activeOverlayOuterEl = null;
       lastSettingsNav = null;
+      if (overlayNavTimer) {
+        clearTimeout(overlayNavTimer);
+        overlayNavTimer = null;
+      }
       detachOverlayAttrObs();
       document.documentElement.classList.remove('agy-we-overlay-open');
       setFocusVeilOpen(false);
@@ -613,39 +671,85 @@
       });
     }
 
-    function setFocusVeilOpen(open, targetZ = 0) {
+    function setFocusVeilOpen(open, targetZ = 0, anchorEl = null) {
       if (!focusVeil) return;
       if (document.body && !focusVeil.isConnected) document.body.appendChild(focusVeil);
-      if (veilOpenRaf) {
-        cancelAnimationFrame(veilOpenRaf);
-        veilOpenRaf = null;
-      }
-      if (veilHideTimer) {
-        clearTimeout(veilHideTimer);
-        veilHideTimer = null;
-      }
       if (open) {
-        // Freeze live wallpaper immediately so Chromium caches the static blurred backdrop across all animation frames!
-        try { window.dispatchEvent(new CustomEvent('agy-we-overlay-pause', { detail: { paused: true } })); } catch {}
-        focusVeil.style.zIndex = String(targetZ > 1 ? targetZ - 1 : 45);
-        // Zero forced reflow (no offsetWidth!): let React's mount frame commit cleanly, then smoothly fade in on next rAF
-        veilOpenRaf = requestAnimationFrame(() => {
-          veilOpenRaf = null;
-          if (hasActiveOverlay) focusVeil.classList.add('open');
-        });
+        // Position focusVeil directly underneath the Settings dialog without ever covering it
+        if (targetZ > 1) {
+          const nextZ = String(targetZ - 1);
+          if (focusVeil.style.zIndex !== nextZ) focusVeil.style.zIndex = nextZ;
+        } else {
+          const bodyAnchor = anchorEl ? findBodyDirectChild(anchorEl) : null;
+          if (bodyAnchor && bodyAnchor.id !== 'root' && bodyAnchor.id !== 'app' && focusVeil.nextSibling !== bodyAnchor) {
+            try { document.body.insertBefore(focusVeil, bodyAnchor); } catch {}
+            focusVeil.style.zIndex = '0';
+          } else {
+            focusVeil.style.zIndex = '40';
+          }
+        }
+        // Mirror #agy-we-modal-backdrop: direct class toggle for immediate, silky 220ms GPU opacity transition
+        // (NO wallpaper pause, NO :root style invalidation, NO 1-frame rAF lag!)
+        focusVeil.classList.add('open');
       } else {
         focusVeil.classList.remove('open');
-        // Keep wallpaper paused until the 220ms unblur fade finishes so all 13+ frames stay locked 60fps!
-        veilHideTimer = setTimeout(() => {
-          veilHideTimer = null;
-          if (!hasActiveOverlay) {
-            try { window.dispatchEvent(new CustomEvent('agy-we-overlay-pause', { detail: { paused: false } })); } catch {}
-          }
-        }, 240);
       }
     }
 
-    function syncSettingsOverlayAndBlur(vw, vh, forceFullClean = false) {
+    function cleanOverlaySubtree(roots, dialogEl) {
+      if (!roots || !roots.length || !dialogEl || !dialogEl.isConnected) return;
+      const or = dialogEl.getBoundingClientRect();
+      if (or.width < 120 || or.height < 120) return;
+
+      // Pure Read Pass (hard 2ms budget, max 48 structural nodes)
+      const tStart = performance.now();
+      const toShell = [];
+      let checked = 0;
+      for (const root of roots) {
+        if (checked >= 48 || performance.now() - tStart > 2) break;
+        if (!root || !root.isConnected || isOwnElement(root)) continue;
+        if (lastSettingsNav && lastSettingsNav.contains(root)) continue;
+        const queue = [root];
+        while (queue.length && checked < 48) {
+          if ((checked & 7) === 0 && performance.now() - tStart > 2) break;
+          const sub = queue.shift();
+          checked += 1;
+          if (!sub || sub.nodeType !== 1 || PRUNE_TAGS.has(sub.tagName) || SKIP_SELF_TAGS.has(sub.tagName) || isOwnElement(sub)) continue;
+          if (sub === dialogEl || sub === lastSettingsNav) continue;
+          if (sub.getAttribute('data-agy-we-shell') === 'transparent') continue;
+          const sr = sub.getBoundingClientRect();
+          if (sr.width >= or.width * 0.42 && sr.height >= 40) {
+            const scs = getComputedStyle(sub);
+            const sbg = parseRgba(scs.backgroundColor);
+            if ((sbg.a > 0.08 && isNeutralColor(sbg.r, sbg.g, sbg.b)) || hasGradient(scs)) {
+              const btmRad = Math.max(
+                parseFloat(scs.borderBottomLeftRadius || '0'),
+                parseFloat(scs.borderBottomRightRadius || '0')
+              );
+              if (sr.height >= or.height * 0.42 || sr.width >= or.width * 0.58 || btmRad < 6 || scs.position === 'sticky') {
+                toShell.push(sub);
+              }
+            }
+          }
+          if (queue.length + checked < 48 && sub.children) {
+            for (let i = 0; i < sub.children.length && i < 16; i += 1) {
+              const ch = sub.children[i];
+              if (ch && ch.nodeType === 1 && !PRUNE_TAGS.has(ch.tagName) && !SKIP_SELF_TAGS.has(ch.tagName)) {
+                queue.push(ch);
+              }
+            }
+          }
+        }
+      }
+
+      // Single Batched Write Pass
+      for (const sub of toShell) {
+        setAttr(sub, 'data-agy-we-shell', 'transparent');
+        delAttr(sub, 'data-agy-we-region');
+      }
+    }
+
+    function syncSettingsOverlayAndBlur(vw, vh, forceFullClean = false, hintRoots = null) {
       // Fast-path: if the exact same Settings overlay is still open & visible, avoid re-walking nodes!
       if (!forceFullClean && hasActiveOverlay && activeOverlayDialogEl) {
         if (
@@ -656,61 +760,32 @@
           closeActiveOverlayNow();
           return null;
         }
-        const r = activeOverlayDialogEl.getBoundingClientRect();
-        if (r.width >= vw * 0.45 && r.height >= vh * 0.45) {
-          const cs = getComputedStyle(activeOverlayDialogEl);
-          if (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0.05) {
-            return activeOverlayOuterEl || activeOverlayDialogEl;
-          }
+        const cs = getComputedStyle(activeOverlayDialogEl);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || (parseFloat(cs.opacity || '1') <= 0.05 && cs.pointerEvents === 'none')) {
+          closeActiveOverlayNow();
+          return null;
         }
+        return activeOverlayOuterEl || activeOverlayDialogEl;
       }
 
-      const found = findFullScreenOverlay(vw, vh);
+      const found = findFullScreenOverlay(vw, vh, hintRoots);
 
       if (!found) {
         closeActiveOverlayNow();
         return null;
       }
 
-      document.querySelectorAll('[data-agy-we-overlay-backdrop]').forEach((el) => el.removeAttribute('data-agy-we-overlay-backdrop'));
-
-      hasActiveOverlay = true;
-      document.documentElement.classList.add('agy-we-overlay-open');
+      // ── Phase 1: Pure Read Pass (ZERO DOM mutations before all geometry & styles are measured!) ──
       const { el: outerOverlayEl, backdrops } = found;
-      const { backdropEl, dialogEl } = unwrapCenteredDialogCard(outerOverlayEl, vw, vh);
-      activeOverlayOuterEl = outerOverlayEl;
-      activeOverlayDialogEl = dialogEl;
-      attachOverlayAttrObs(outerOverlayEl, dialogEl);
-
-      // Determine stacking order for our smooth GPU focus veil (always strictly underneath Settings)
+      const { backdropEl, innerBackdrops, dialogEl, dialogRect: or, isFullViewport } = unwrapCenteredDialogCard(outerOverlayEl, vw, vh);
       const overlayZ = Math.max(findOverlayStackZ(dialogEl), findOverlayStackZ(outerOverlayEl));
-      setFocusVeilOpen(true, overlayZ);
 
-      // Neutralize host's own harsh/unanimated backdrop so our smooth #agy-we-focus-veil handles the 60fps blur fade
-      if (backdropEl) {
-        setAttr(backdropEl, 'data-agy-we-overlay-backdrop', '1');
-        delAttr(backdropEl, 'data-agy-we-shell');
-        delAttr(backdropEl, 'data-agy-we-region');
-      }
-      for (const bd of backdrops) {
-        if (bd !== dialogEl && !bd.contains(dialogEl) && !isOwnElement(bd)) {
-          setAttr(bd, 'data-agy-we-overlay-backdrop', '1');
-          delAttr(bd, 'data-agy-we-shell');
-        }
-      }
-
-      // NOTE: Do NOT animate opacity on underlying #root — keeping #root 100% static lets Chromium's GPU compositor
-      // cache #agy-we-focus-veil's backdrop-filter blur texture across every frame of the 220ms fade!
-      setAttr(dialogEl, 'data-agy-we-region', 'settings-overlay');
-      setAttr(dialogEl, 'data-agy-we-has-backdrop', '1');
-      delAttr(dialogEl, 'data-agy-we-shell');
-
-      // Clean inside Settings dialog with batched read/write
-      const or = dialogEl.getBoundingClientRect();
       let navEl = null;
       const toShell = [];
+      const tStart = performance.now();
       const nodes = dialogEl.querySelectorAll('div, aside, nav, section, main, header');
-      for (let i = 0; i < nodes.length && i < 360; i += 1) {
+      for (let i = 0; i < nodes.length && i < 180; i += 1) {
+        if ((i & 15) === 0 && performance.now() - tStart > 3.5) break;
         const sub = nodes[i];
         if (isOwnElement(sub)) continue;
         if (navEl && navEl.contains(sub)) continue;
@@ -722,7 +797,7 @@
           sr.left <= or.left + 32 &&
           sr.width >= 120 &&
           sr.width <= Math.min(340, or.width * 0.36) &&
-          sr.height >= or.height * 0.50;
+          sr.height >= or.height * 0.48;
 
         if (isLeftNav) {
           navEl = sub;
@@ -744,6 +819,49 @@
         }
       }
 
+      const prevBackdrops = document.querySelectorAll('[data-agy-we-overlay-backdrop]');
+
+      // ── Phase 2: Single Batched Write Pass (zero forced synchronous reflow!) ──
+      for (const el of prevBackdrops) el.removeAttribute('data-agy-we-overlay-backdrop');
+
+      hasActiveOverlay = true;
+      activeOverlayOuterEl = outerOverlayEl;
+      activeOverlayDialogEl = dialogEl;
+      lastSettingsNav = navEl;
+      document.documentElement.classList.add('agy-we-overlay-open');
+      attachOverlayAttrObs(outerOverlayEl, dialogEl);
+
+      // Centered dialog: pair #agy-we-focus-veil (8px soft blur) + dialog (28px rich liquid glass), identical to #agy-we-modal!
+      // Full-viewport overlay: skip redundant hidden focusVeil blur so GPU renders only 1 full-screen blur pass!
+      if (!isFullViewport) {
+        setFocusVeilOpen(true, overlayZ, outerOverlayEl);
+      } else {
+        setFocusVeilOpen(false);
+      }
+
+      // Neutralize host's own harsh/unanimated backdrop & inner backdrops so there is NEVER a double backdrop-filter!
+      if (backdropEl) {
+        setAttr(backdropEl, 'data-agy-we-overlay-backdrop', '1');
+        delAttr(backdropEl, 'data-agy-we-shell');
+        delAttr(backdropEl, 'data-agy-we-region');
+      }
+      for (const bd of innerBackdrops) {
+        if (bd !== dialogEl && !bd.contains(dialogEl) && !isOwnElement(bd)) {
+          setAttr(bd, 'data-agy-we-overlay-backdrop', '1');
+          delAttr(bd, 'data-agy-we-shell');
+        }
+      }
+      for (const bd of backdrops) {
+        if (bd !== dialogEl && !bd.contains(dialogEl) && !isOwnElement(bd)) {
+          setAttr(bd, 'data-agy-we-overlay-backdrop', '1');
+          delAttr(bd, 'data-agy-we-shell');
+        }
+      }
+
+      setAttr(dialogEl, 'data-agy-we-region', 'settings-overlay');
+      setAttr(dialogEl, 'data-agy-we-has-backdrop', isFullViewport ? '0' : '1');
+      delAttr(dialogEl, 'data-agy-we-shell');
+
       if (navEl) {
         setAttr(navEl, 'data-agy-we-region', 'settings-nav');
         delAttr(navEl, 'data-agy-we-shell');
@@ -753,16 +871,25 @@
         delAttr(sub, 'data-agy-we-region');
       }
 
-      lastSettingsNav = navEl;
-      if (navEl) reconcileSidebarRegion(navEl);
+      // Defer secondary nav-row polish until AFTER the 240ms entrance animation finishes (zero frame-0 jank!)
+      if (overlayNavTimer) clearTimeout(overlayNavTimer);
+      if (navEl) {
+        overlayNavTimer = setTimeout(() => {
+          overlayNavTimer = null;
+          if (hasActiveOverlay && lastSettingsNav && lastSettingsNav.isConnected) {
+            reconcileAllSidebars(true);
+          }
+        }, 260);
+      }
+
       return outerOverlayEl;
     }
 
-    function scheduleSidebarReconcile(delayMs = 80) {
+    function scheduleSidebarReconcile(delayMs = 80, onlySettingsNav = false) {
       if (sidebarReconcileTimer) clearTimeout(sidebarReconcileTimer);
       sidebarReconcileTimer = setTimeout(() => {
         sidebarReconcileTimer = null;
-        reconcileAllSidebars();
+        reconcileAllSidebars(onlySettingsNav);
       }, delayMs);
     }
 
@@ -775,6 +902,10 @@
       activeOverlayOuterEl = null;
       lastSettingsNav = null;
       lastHoveredRow = null;
+      if (overlayNavTimer) {
+        clearTimeout(overlayNavTimer);
+        overlayNavTimer = null;
+      }
       detachOverlayAttrObs();
       setFocusVeilOpen(false);
       document.documentElement.classList.remove('agy-we-overlay-open');
@@ -886,7 +1017,8 @@
         const protectedMainAncestors = new Set();
 
         // 0. Detect newly mounted Settings/modal overlay synchronously at t=0ms (before Frame 1 paints!)
-        let maybeOverlay = hasActiveOverlay;
+        const wasOverlayOpen = hasActiveOverlay;
+        let maybeOverlay = wasOverlayOpen;
         if (!maybeOverlay) {
           for (const root of addedRoots) {
             if (!root || !root.isConnected || isOwnElement(root)) continue;
@@ -902,14 +1034,27 @@
               break;
             }
             const rr = root.getBoundingClientRect();
-            // Catch nested portal/fixed overlays (either 0x0 portal wrapper or >=45% large overlay div)
-            if (rr.width === 0 || rr.height === 0 || (rr.width >= vw * 0.45 && rr.height >= vh * 0.45)) {
+            // Catch nested portal/fixed overlays (either 0x0 portal wrapper or >=42% large overlay div)
+            if (rr.width === 0 || rr.height === 0 || (rr.width >= vw * 0.42 && rr.height >= vh * 0.42)) {
               maybeOverlay = true;
               break;
             }
           }
         }
-        const activeOverlayEl = maybeOverlay ? syncSettingsOverlayAndBlur(vw, vh, false) : null;
+        const activeOverlayEl = maybeOverlay ? syncSettingsOverlayAndBlur(vw, vh, false, addedRoots) : null;
+
+        // Fast exit: when Settings overlay just opened or tab content updated inside it,
+        // skip all main-canvas scanning to keep Frame 1 & tab switches locked at 60fps!
+        if (activeOverlayEl) {
+          if (wasOverlayOpen && activeOverlayDialogEl) {
+            const insideRoots = addedRoots.filter((r) => r && r.isConnected && activeOverlayDialogEl.contains(r));
+            if (insideRoots.length) {
+              cleanOverlaySubtree(insideRoots, activeOverlayDialogEl);
+            }
+          }
+          const outsideRoots = addedRoots.filter((r) => r && r.isConnected && r !== activeOverlayEl && !activeOverlayEl.contains(r));
+          if (!outsideRoots.length) return;
+        }
 
         // 1. Immediately catch any newly mounted composer & its dock/ancestors before Frame 1 paints
         for (const root of addedRoots) {
@@ -1547,43 +1692,63 @@
             background-color: rgba(${isDark ? '255, 255, 255' : '15, 23, 42'}, ${isDark ? '0.09' : '0.07'}) !important;
             background-image: none !important;
           }
-          /* Compositor-cached 60fps focus veil: static underlying #root + paused WebGL lets GPU cache the blur! */
+          /* Settings modal backdrop & surface — aligned 1:1 with #agy-we-modal-backdrop & #agy-we-modal */
+          @keyframes agy-we-settings-pop {
+            from {
+              opacity: 0;
+              scale: 0.97;
+              translate: 0 10px;
+            }
+            to {
+              opacity: 1;
+              scale: 1;
+              translate: 0 0;
+            }
+          }
           #agy-we-focus-veil {
             position: fixed;
             inset: 0;
             pointer-events: none;
-            background-color: rgba(${isDark ? '4, 10, 20' : '241, 245, 249'}, ${isDark ? '0.56' : '0.48'});
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background-color: ${isDark ? 'rgba(2, 6, 16, 0.48)' : 'rgba(241, 245, 249, 0.42)'};
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             opacity: 0;
             visibility: hidden;
-            transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 220ms;
+            will-change: opacity;
+            contain: strict;
+            transition: opacity 220ms ease, visibility 0s linear 220ms;
           }
           #agy-we-focus-veil.open {
             opacity: 1;
             visibility: visible;
-            transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+            transition: opacity 220ms ease, visibility 0s;
           }
           html.agy-we-active [data-agy-we-overlay-backdrop="1"],
           html.agy-we-active dialog[open]::backdrop {
             background: transparent !important;
             background-color: transparent !important;
+            background-image: none !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
           }
           html.agy-we-active [data-agy-we-region="settings-overlay"] {
-            background-color: rgba(${gr}, ${gg}, ${gb}, ${Math.max(isDark ? 0.78 : 0.86, Math.min(0.92, effAlpha + 0.44)).toFixed(3)}) !important;
-            background-image: ${sheenGrad} !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            border-color: rgba(${borderRgb}, ${Math.min(0.28, Number(borderAlpha) * 1.1).toFixed(3)}) !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,${rimTop}), 0 24px 64px rgba(0,0,0,${isDark ? '0.46' : '0.18'}) !important;
+            background-color: ${isDark ? `rgba(${gr}, ${gg}, ${gb}, 0.72)` : 'rgba(250, 252, 255, 0.84)'} !important;
+            background-image: ${isDark
+              ? 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 36%, rgba(255,255,255,0.005) 100%)'
+              : 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.16) 38%, rgba(255,255,255,0.02) 100%)'} !important;
+            backdrop-filter: blur(28px) saturate(170%) brightness(1.03) !important;
+            -webkit-backdrop-filter: blur(28px) saturate(170%) brightness(1.03) !important;
+            border-color: ${isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.14)'} !important;
+            box-shadow: ${isDark
+              ? 'inset 0 1px 0 rgba(255,255,255,0.28), 0 28px 80px rgba(0,0,0,0.58)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.72), 0 28px 80px rgba(15,23,42,0.18)'} !important;
+            animation: agy-we-settings-pop 240ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
           }
           html.agy-we-active [data-agy-we-region="settings-nav"] {
-            background-color: rgba(${gr}, ${gg}, ${gb}, ${Math.max(isDark ? 0.30 : 0.40, Math.min(0.60, sidebarAlpha + 0.08)).toFixed(3)}) !important;
-            background-image: ${sheenGrad} !important;
-            border-right: 1px solid rgba(${borderRgb}, ${Math.min(0.20, Number(borderAlpha)).toFixed(3)}) !important;
-            box-shadow: inset -1px 0 0 rgba(${borderRgb}, ${Math.min(0.14, Number(borderAlpha)).toFixed(3)}) !important;
+            background-color: ${isDark ? 'rgba(2, 8, 18, 0.18)' : 'rgba(255, 255, 255, 0.34)'} !important;
+            background-image: none !important;
+            border-right: 1px solid ${isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(15, 23, 42, 0.10)'} !important;
+            box-shadow: none !important;
           }
           /* Active/selected sidebar row ONLY: clean soft ice-accent capsule */
           html.agy-we-active [data-agy-we-item-soft="1"],
@@ -1944,14 +2109,21 @@
       const t = e.target;
       if (!t || !t.closest || isOwnElement(t)) return;
       if (hasActiveOverlay) {
-        requestAnimationFrame(quickCheckOverlayClose);
-        setTimeout(quickCheckOverlayClose, 45);
+        const clickedInsideDialog = Boolean(activeOverlayDialogEl && activeOverlayDialogEl.contains(t));
+        const clickedCloseBtn = Boolean(
+          clickedInsideDialog &&
+          t.closest('button[aria-label*="close" i], button[aria-label*="关闭"], [data-slot="dialog-close"]')
+        );
+        if (!clickedInsideDialog || clickedCloseBtn) {
+          requestAnimationFrame(quickCheckOverlayClose);
+          setTimeout(quickCheckOverlayClose, 60);
+        }
       }
       const region = t.closest('[data-agy-we-region="left-sidebar"], [data-agy-we-region="right-sidebar"], [data-agy-we-region="settings-nav"]');
       if (!region) return;
+      const isSettingsNav = region.getAttribute('data-agy-we-region') === 'settings-nav';
       pendingPostClickReconcile = true;
-      scheduleSidebarReconcile(60);
-      setTimeout(() => scheduleSidebarReconcile(10), 220);
+      scheduleSidebarReconcile(isSettingsNav ? 90 : 60, isSettingsNav);
     };
 
     document.addEventListener('pointerover', onPointerOver, true);
@@ -1988,9 +2160,7 @@
         if (scanTimer) clearTimeout(scanTimer);
         if (sidebarReconcileTimer) clearTimeout(sidebarReconcileTimer);
         if (hoverRaf) cancelAnimationFrame(hoverRaf);
-        if (veilOpenRaf) cancelAnimationFrame(veilOpenRaf);
-        if (veilHideTimer) clearTimeout(veilHideTimer);
-        try { window.dispatchEvent(new CustomEvent('agy-we-overlay-pause', { detail: { paused: false } })); } catch {}
+        if (overlayNavTimer) clearTimeout(overlayNavTimer);
         clearTimeout(settle1);
         clearTimeout(settle2);
         clearDomMarks();

@@ -50,7 +50,6 @@
     let batteryLow = false;
     let docHidden = document.hidden;
     let winBlurred = false;
-    let overlayPaused = false;
     let destroyed = false;
 
     function ensureMounted() {
@@ -74,7 +73,6 @@
     function computePaused(s) {
       if (!s.enabled) return { paused: true, reason: 'disabled' };
       if (s.paused) return { paused: true, reason: 'manual' };
-      if (overlayPaused) return { paused: true, reason: 'overlay' };
       if (s.pauseOnHidden && docHidden) return { paused: true, reason: 'hidden' };
       if (s.pauseOnBlur && winBlurred) return { paused: true, reason: 'blur' };
       if (s.pauseOnBattery && batteryLow) return { paused: true, reason: 'battery' };
@@ -542,20 +540,12 @@
       applyVisualStyles(store.getSettings());
     }
 
-    function onOverlayPause(ev) {
-      const next = Boolean(ev && ev.detail && ev.detail.paused);
-      if (next === overlayPaused) return;
-      overlayPaused = next;
-      applyVisualStyles(store.getSettings());
-    }
-
     window.addEventListener('message', onMessage);
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('resize', onResize, { passive: true });
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('blur', onWinBlur);
     window.addEventListener('focus', onWinFocus);
-    window.addEventListener('agy-we-overlay-pause', onOverlayPause);
 
     if (navigator.getBattery) {
       navigator.getBattery().then((bat) => {
@@ -600,7 +590,6 @@
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('blur', onWinBlur);
         window.removeEventListener('focus', onWinFocus);
-        window.removeEventListener('agy-we-overlay-pause', onOverlayPause);
         document.documentElement.classList.remove('agy-we-active');
         document.documentElement.style.removeProperty('--agy-we-underlay');
         try { root.remove(); } catch {}
