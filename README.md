@@ -3,32 +3,24 @@
 <h1>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.png">
-    <img src="assets/readme/hero-light.png" alt="Antigravity Wallpaper Engine — 把本机动态壁纸与 iOS 液态玻璃带入 Antigravity 2.0" width="1440">
+    <img src="assets/readme/hero-light.png" alt="Antigravity Wallpaper Engine — 让本机动态壁纸与 iOS 液态玻璃失重悬浮于 Antigravity 2.0" width="1440">
   </picture>
 </h1>
 
 <p>
-  <a href="https://github.com/mugonk/antigravity-wallpaper-engine/stargazers"><img src="https://img.shields.io/github/stars/mugonk/antigravity-wallpaper-engine?style=flat-square&logo=github&label=Stars&color=38bdf8&labelColor=1e293b" alt="GitHub Stars" /></a>
-  <a href="https://github.com/mugonk/antigravity-wallpaper-engine/releases"><img src="https://img.shields.io/github/v/release/mugonk/antigravity-wallpaper-engine?style=flat-square&label=Release&color=6366f1&labelColor=1e293b" alt="GitHub Release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square&labelColor=1e293b" alt="License: MIT" /></a>
-  <img src="https://img.shields.io/badge/Node.js-%3E%3D20.0.0-38bdf8?style=flat-square&logo=node.js&logoColor=white&labelColor=1e293b" alt="Node.js >= 20" />
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%2F11%20%7C%20Antigravity%202.0-0ea5e9?style=flat-square&labelColor=1e293b" alt="Platform: Windows | Antigravity 2.0" />
-  <a href="https://github.com/elysia395/dsh-wallpaper-engine"><img src="https://img.shields.io/badge/Adapted%20from-dsh--wallpaper--engine-ec4899?style=flat-square&logo=github&labelColor=1e293b" alt="Upstream: dsh-wallpaper-engine" /></a>
+  <a href="https://github.com/mugonk/antigravity-wallpaper-engine/stargazers"><img src="https://img.shields.io/github/stars/mugonk/antigravity-wallpaper-engine?style=for-the-badge&logo=github&label=Stars&color=38bdf8&labelColor=0f172a" alt="GitHub Stars" height="24" /></a>
+  <a href="https://github.com/mugonk/antigravity-wallpaper-engine/releases"><img src="https://img.shields.io/github/v/release/mugonk/antigravity-wallpaper-engine?style=for-the-badge&label=Release&color=6366f1&labelColor=0f172a" alt="GitHub Release" height="24" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10b981?style=for-the-badge&labelColor=0f172a" alt="License: MIT" height="24" /></a>
+  <img src="https://img.shields.io/badge/Node.js-%3E%3D20.0.0-0ea5e9?style=for-the-badge&logo=node.js&logoColor=white&labelColor=0f172a" alt="Node.js >= 20" height="24" />
+  <a href="https://github.com/elysia395/dsh-wallpaper-engine"><img src="https://img.shields.io/badge/Adapted%20from-dsh--wallpaper--engine-ec4899?style=for-the-badge&logo=github&labelColor=0f172a" alt="Upstream: dsh-wallpaper-engine" height="24" /></a>
 </p>
 
 <p>
-  <a href="#start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/key-get-dark.png"><img src="assets/readme/key-get-light.png" alt="快速安装 GET" height="46"></picture></a>&nbsp;
-  <a href="#presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/key-presets-dark.png"><img src="assets/readme/key-presets-light.png" alt="预设外观 PRESETS" height="46"></picture></a>&nbsp;
-  <a href="#formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/key-formats-dark.png"><img src="assets/readme/key-formats-light.png" alt="支持格式 FORMATS" height="46"></picture></a>&nbsp;
-  <a href="#faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/key-faq-dark.png"><img src="assets/readme/key-faq-light.png" alt="常见问题 FAQ" height="46"></picture></a>&nbsp;
-  <a href="#credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/key-credits-dark.png"><img src="assets/readme/key-credits-light.png" alt="出处致谢 CREDITS" height="46"></picture></a>
-</p>
-
-<p>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/metrics-dark.png">
-    <img src="assets/readme/metrics-light.png" alt="版本 1.0.0 · 4+ 壁纸格式 · 11 套预设 · 0 Token 开销" width="1440">
-  </picture>
+  <a href="#start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-get-dark.png"><img src="assets/readme/nav-get-light.png" alt="快速安装" height="42"></picture></a>&nbsp;
+  <a href="#presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-presets-dark.png"><img src="assets/readme/nav-presets-light.png" alt="液态玻璃预设" height="42"></picture></a>&nbsp;
+  <a href="#formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-formats-dark.png"><img src="assets/readme/nav-formats-light.png" alt="支持格式" height="42"></picture></a>&nbsp;
+  <a href="#faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-faq-dark.png"><img src="assets/readme/nav-faq-light.png" alt="常见问题" height="42"></picture></a>&nbsp;
+  <a href="#credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/nav-credits-dark.png"><img src="assets/readme/nav-credits-light.png" alt="原项目致谢" height="42"></picture></a>
 </p>
 
 </div>
@@ -36,41 +28,21 @@
 > [!NOTE]
 > **原项目声明**：本项目移植并深度适配自 [`elysia395/dsh-wallpaper-engine`](https://github.com/elysia395/dsh-wallpaper-engine)（`dsh-plugin-wallpaper-engine`），Scene 场景实时渲染引擎由 [`oneincase/webwallgl`](https://github.com/oneincase/webwallgl) 驱动。详细出处与完整致谢请见文末 [原项目出处与致谢](#credits) 章节。
 
----
-
-<h2 id="features"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-features-dark.png"><img src="assets/readme/section-features-light.png" alt="FEATURES · 核心特性" width="1440"></picture></h2>
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🎬 全格式本地壁纸直连</h3>
-      自动扫描本机 Steam / Wallpaper Engine 创意工坊与自定义目录，实时渲染 <b>Scene / Web / Video / Picture</b> 壁纸，支持上传本地图片与视频，<b>无需在后台启动 Wallpaper Engine 客户端</b>。
-    </td>
-    <td width="50%" valign="top">
-      <h3>🧊 iOS 风格液态玻璃外观</h3>
-      支持对左右侧栏、对话卡片、输入框、弹窗独立开启液态玻璃，细调模糊度、透光率、遮罩深度、边框高光、独立四角圆角与主/次文字颜色，所见即所得。
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🐾 吉祥物拉绳与交互特效</h3>
-      右上角悬浮吉祥物拉绳快捷入口，内置 <b>10 款角色</b> 与自定义头像上传，支持点击波纹 / 火花、鼠标彗星拖尾与 3D 视差效果，拉一下即可唤醒壁纸库。
-    </td>
-    <td width="50%" valign="top">
-      <h3>⚡ 零 Agent Token 开销 · 多插件共存</h3>
-      纯本地 Loopback 媒体服务 + 渲染层注入，<b>不注册任何 MCP 工具、不注入提示词</b>；采用独立 1 行 ASAR 引导标记（<code>/* AGY_WE_HOOK_V1 */</code>），与 <code>antigravity-zh-cn</code> 汉化插件安全共存。
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/bento-dark.png">
+    <img src="assets/readme/bento-light.png" alt="Antigravity Wallpaper Engine 六大核心能力全景 Bento Grid" width="1440">
+  </picture>
+</p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/mascots-dark.png">
-    <img src="assets/readme/mascots-light.png" alt="内置 10 款吉祥物拉绳图标（Gemini / Whale / DeepSeek / Claude / GPT / Grok / Qwen / Kimi / GLM / Phoebe）" width="1440">
+    <img src="assets/readme/mascots-light.png" alt="内置 10 款悬浮吉祥物拉绳星轨展台（Gemini / Whale / DeepSeek / Claude / GPT / Grok / Qwen / Kimi / GLM / Phoebe）" width="1440">
   </picture>
 </p>
 
-<h2 id="formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-formats-dark.png"><img src="assets/readme/section-formats-light.png" alt="FORMATS · 支持的壁纸类型" width="1440"></picture></h2>
+<h2 id="formats"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-formats-dark.png"><img src="assets/readme/sec-formats-light.png" alt="FORMATS · 支持的壁纸类型" width="1440"></picture></h2>
 
 | 壁纸类型 | 渲染方式 | 支持说明 |
 | :--- | :--- | :--- |
@@ -81,7 +53,7 @@
 | **自定义上传** | 本地上传 JPG / PNG / WebP / MP4 | 所有文件仅保存在本机 `~/.antigravity-wallpaper-engine/uploads/`，不外传 |
 | **Application（应用）** | ❌ 不支持 | 应用型壁纸依赖外部可执行程序，扫描与轮播时会自动过滤 |
 
-<h2 id="presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-presets-dark.png"><img src="assets/readme/section-presets-light.png" alt="PRESETS · 预设与外观分享" width="1440"></picture></h2>
+<h2 id="presets"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-presets-dark.png"><img src="assets/readme/sec-presets-light.png" alt="PRESETS · 液态玻璃预设与外观分享" width="1440"></picture></h2>
 
 本项目内置 **11 套开箱即用预设**，并额外附带作者自用的推荐预设文件，方便一键复刻同款 **冰透晶玻 + Gemini 拉绳** 观感：
 
@@ -96,7 +68,7 @@
 1. **界面一键导入（推荐）**：在 Antigravity 中按 **`Ctrl + Alt + W`**（或下拉右上角吉祥物）打开壁纸面板 → 进入设置弹窗 → 点击 **「导入预设...」** → 选择仓库中的 [`presets/agy-wallpaper-preset.json`](presets/agy-wallpaper-preset.json) 即可立即生效并自动保存。
 2. **文件目录放置**：将 [`presets/agy-wallpaper-preset.json`](presets/agy-wallpaper-preset.json) 复制到 `~/.antigravity-wallpaper-engine/presets/` 目录，重新打开面板即可在预设列表中选用。
 
-<h2 id="start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-start-dark.png"><img src="assets/readme/section-start-light.png" alt="GET STARTED · 快速开始与安装" width="1440"></picture></h2>
+<h2 id="start"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-start-dark.png"><img src="assets/readme/sec-start-light.png" alt="QUICK START · 快速开始与安装" width="1440"></picture></h2>
 
 ### 前置条件
 
@@ -128,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.gemini\config\plugin
 - 按快捷键 **`Ctrl + Alt + W`**，或点击窗口右上角的 **吉祥物拉绳**，即可打开壁纸库与液态玻璃设置面板。
 - 所有设置实时原子落盘在 `~/.antigravity-wallpaper-engine/config.json`，调整滑块与配色后**即时生效，无需重启**。
 
-<h2 id="maintain"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-maintain-dark.png"><img src="assets/readme/section-maintain-light.png" alt="MAINTAIN · 常用维护与安全卸载" width="1440"></picture></h2>
+<h2 id="maintain"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-maintain-dark.png"><img src="assets/readme/sec-maintain-light.png" alt="MAINTAIN · 常用维护与安全卸载" width="1440"></picture></h2>
 
 ```powershell
 # 检查插件运行状态、钩子共存状态与壁纸库扫描诊断
@@ -147,17 +119,17 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.gemini\config\plugin
 > [!IMPORTANT]
 > 卸载脚本仅精准移除 `/* AGY_WE_HOOK_V1 */` 这一行引导钩子及本插件的计划任务，**完全保留 `antigravity-zh-cn` 汉化等其他插件的钩子与配置**。
 
-<h2 id="arch"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-arch-dark.png"><img src="assets/readme/section-arch-light.png" alt="ARCHITECTURE · 目录结构与实现原理" width="1440"></picture></h2>
+<h2 id="arch"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-arch-dark.png"><img src="assets/readme/sec-arch-light.png" alt="ARCHITECTURE · 目录结构与实现原理" width="1440"></picture></h2>
 
 <details>
 <summary><b>点击展开完整目录结构与工作原理说明</b></summary>
 
 ```text
 antigravity-wallpaper-engine/
-├── assets/                   # 插件图标、10 款吉祥物拉绳与亮/暗双主题 README 视觉素材
+├── assets/                   # 插件图标、10 款吉祥物拉绳与原创液态玻璃 README 视觉素材
 │   ├── logo.svg
 │   ├── rope/                 # 内置 10 款吉祥物拉绳 PNG
-│   └── readme/               # 可复现的 README 双主题渲染脚本与视觉产物
+│   └── readme/               # NumPy + Pillow 物理液态玻璃双主题渲染脚本与视觉产物
 ├── presets/                  # 可直接导入分享的 JSON 外观预设
 │   └── agy-wallpaper-preset.json
 ├── runtime/                  # Electron 主进程与渲染层注入
@@ -183,7 +155,7 @@ antigravity-wallpaper-engine/
 
 </details>
 
-<h2 id="faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-faq-dark.png"><img src="assets/readme/section-faq-light.png" alt="FAQ · 常见问题" width="1440"></picture></h2>
+<h2 id="faq"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-faq-dark.png"><img src="assets/readme/sec-faq-light.png" alt="FAQ · 常见问题" width="1440"></picture></h2>
 
 <details>
 <summary><b>1. 会和 <code>antigravity-zh-cn</code> 汉化插件冲突吗？</b></summary>
@@ -209,7 +181,7 @@ antigravity-wallpaper-engine/
 可在设置面板中将 **Scene 渲染帧率** 从 `60 FPS` 调低至 `30 FPS` / `15 FPS`，并保持开启 **窗口隐藏时自动暂停（`pauseOnHidden`）**，或开启失焦暂停以节省 GPU 资源。
 </details>
 
-<h2 id="credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/section-credits-dark.png"><img src="assets/readme/section-credits-light.png" alt="CREDITS · 原项目出处与致谢" width="1440"></picture></h2>
+<h2 id="credits"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/readme/sec-credits-dark.png"><img src="assets/readme/sec-credits-light.png" alt="CREDITS · 原项目出处与致谢" width="1440"></picture></h2>
 
 本项目的诞生离不开以下优秀开源项目与社区开发者的工作，特此致以诚挚感谢 ❤️：
 
@@ -217,7 +189,6 @@ antigravity-wallpaper-engine/
 | :--- | :--- | :---: | :--- |
 | [**`elysia395/dsh-wallpaper-engine`**](https://github.com/elysia395/dsh-wallpaper-engine) (`dsh-plugin-wallpaper-engine`) | [@elysia395](https://github.com/elysia395) 及全体贡献者 | MIT | **核心原项目出处**：本项目移植并适配自该仓库；承袭其 Steam/WE 壁纸库扫描、PKG/MP4 解析与流式服务、Web 沙箱兼容层、iOS 液态玻璃美学、经典预设与吉祥物拉绳素材 |
 | [**`oneincase/webwallgl`**](https://github.com/oneincase/webwallgl) | [@oneincase](https://github.com/oneincase) | MIT | 提供浏览器端 Wallpaper Engine **Scene 场景壁纸 WebGL 实时渲染引擎** |
-| **Jersey 20 Font** | The Soft Type Project Authors | [SIL OFL 1.1](assets/readme/OFL-Jersey20.txt) | 仅用于 [`assets/readme/generate.py`](assets/readme/generate.py) 生成 README 亮/暗双主题标题视觉素材，不作为插件运行时依赖 |
 
 > 如果这个插件对您有帮助，也请顺手前往原项目 [**elysia395/dsh-wallpaper-engine**](https://github.com/elysia395/dsh-wallpaper-engine) 与 [**oneincase/webwallgl**](https://github.com/oneincase/webwallgl) 点一颗 ⭐ Star 支持原作者！
 
