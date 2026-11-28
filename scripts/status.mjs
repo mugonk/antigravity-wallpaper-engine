@@ -43,20 +43,29 @@ function checkScheduledTask() {
 
 const installedVersion = fs.existsSync(VERSION_FILE) ? fs.readFileSync(VERSION_FILE, 'utf8').trim() : '未检测到';
 const asar = checkAsarStatus();
+const installedAppVersion = asar.appVersion || '';
 const heartbeat = readJson(HEARTBEAT_PATH, null);
 const cfg = readConfig();
 const settings = cfg.settings || {};
+
+const versionMatched = Boolean(
+  heartbeat &&
+  (installedAppVersion && heartbeat.appVersion
+    ? heartbeat.appVersion === installedAppVersion
+    : heartbeat.installedVersion === installedVersion)
+);
 
 console.log(JSON.stringify({
   pluginDir: PLUGIN_ROOT,
   antigravityDir: AGY_DIR,
   installedVersion,
+  installedAppVersion,
   asar,
   webwallglInstalled: fs.existsSync(WEBWALLGL_PATH),
   rendererBundleBuilt: fs.existsSync(BUNDLE_PATH),
   logonGuardTaskRegistered: checkScheduledTask(),
   heartbeat,
-  activeOnCurrentVersion: Boolean(heartbeat && heartbeat.installedVersion === installedVersion),
+  activeOnCurrentVersion: Boolean(asar.wePatched && versionMatched),
   config: {
     path: getConfigPath(),
     enabled: Boolean(settings.enabled),

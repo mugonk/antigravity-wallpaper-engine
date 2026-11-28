@@ -26,6 +26,7 @@ const COPY_ITEMS = [
   'package.json',
   'package-lock.json',
   'plugin.json',
+  'hooks.json',
   'assets',
   'runtime',
   'server',

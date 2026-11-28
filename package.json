@@ -1,6 +1,6 @@
 {
   "name": "antigravity-wallpaper-engine",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Wallpaper Engine & Liquid Glass adaptation for Antigravity 2.0 (adapted from elysia395/dsh-wallpaper-engine)",
   "type": "module",
   "license": "MIT",

@@ -6802,7 +6802,7 @@
     });
 
     const api = {
-      version: cfg.version || '1.0.1',
+      version: cfg.version || '1.0.2',
       buildStamp: cfg.buildStamp || '',
       apiBase: cfg.apiBase,
       store,

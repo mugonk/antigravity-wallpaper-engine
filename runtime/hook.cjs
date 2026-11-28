@@ -44,7 +44,7 @@ if (!electron || !electron.app) {
 }
 
 const heartbeatState = {
-  pluginVersion: '1.0.1',
+  pluginVersion: '1.0.2',
   mode: global.__AGY_WE_MODE__ || 'asar',
   electronVersion: process.versions.electron || '',
   appVersion: '',

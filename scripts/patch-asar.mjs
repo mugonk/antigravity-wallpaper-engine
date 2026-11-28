@@ -137,6 +137,20 @@ function writeAsar(header, fileList, outPath, expectWePresent) {
   }
 }
 
+function readAppVersionFromAsar(buf, header, dataOffset) {
+  try {
+    const pkgEntry = header?.files?.['package.json'];
+    if (!pkgEntry || pkgEntry.offset === undefined) return '';
+    const pkgRaw = buf
+      .subarray(dataOffset + Number(pkgEntry.offset), dataOffset + Number(pkgEntry.offset) + Number(pkgEntry.size))
+      .toString('utf8');
+    const pkg = JSON.parse(pkgRaw);
+    return typeof pkg?.version === 'string' ? pkg.version.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
 export function checkAsarStatus(asarPath = DEFAULT_ASAR) {
   const bakPath = `${asarPath}.bak`;
   if (!fs.existsSync(asarPath)) {
@@ -145,10 +159,12 @@ export function checkAsarStatus(asarPath = DEFAULT_ASAR) {
       wePatched: false,
       zhCnPatched: false,
       backupExists: fs.existsSync(bakPath),
+      appVersion: '',
       asarPath,
     };
   }
   const { buf, header, dataOffset } = readAsar(asarPath);
+  const appVersion = readAppVersionFromAsar(buf, header, dataOffset);
   const mainEntry = header?.files?.dist?.files?.['main.js'];
   if (!mainEntry || mainEntry.offset === undefined) {
     return {
@@ -156,6 +172,7 @@ export function checkAsarStatus(asarPath = DEFAULT_ASAR) {
       wePatched: false,
       zhCnPatched: false,
       backupExists: fs.existsSync(bakPath),
+      appVersion,
       asarPath,
       error: 'missing dist/main.js',
     };
@@ -168,6 +185,7 @@ export function checkAsarStatus(asarPath = DEFAULT_ASAR) {
     wePatched: mainSrc.includes(MARKER),
     zhCnPatched: mainSrc.includes(ZH_CN_MARKER),
     backupExists: fs.existsSync(bakPath),
+    appVersion,
     asarPath,
   };
 }

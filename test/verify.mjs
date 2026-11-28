@@ -43,15 +43,20 @@ async function runTest(name, fn) {
   }
 }
 
-function createFakeAsar(outPath, mainJsContent) {
+function createFakeAsar(outPath, mainJsContent, appVersion = '2.36.0') {
   const mainBuf = Buffer.from(mainJsContent, 'utf8');
+  const pkgBuf = Buffer.from(JSON.stringify({ name: 'antigravity', version: appVersion }), 'utf8');
   const header = {
     files: {
+      'package.json': {
+        size: pkgBuf.length,
+        offset: '0',
+      },
       dist: {
         files: {
           'main.js': {
             size: mainBuf.length,
-            offset: '0',
+            offset: String(pkgBuf.length),
           },
         },
       },
@@ -67,7 +72,7 @@ function createFakeAsar(outPath, mainJsContent) {
   prefix.writeUInt32LE(payloadSize, 8);
   prefix.writeUInt32LE(headerStr.length, 12);
   headerStr.copy(prefix, 16);
-  fs.writeFileSync(outPath, Buffer.concat([prefix, mainBuf]));
+  fs.writeFileSync(outPath, Buffer.concat([prefix, pkgBuf, mainBuf]));
 }
 
 let srv = null;
@@ -237,6 +242,7 @@ try {
     const st0 = checkAsarStatus(fakeAsar);
     assert.equal(st0.wePatched, false);
     assert.equal(st0.zhCnPatched, true);
+    assert.equal(st0.appVersion, '2.36.0');
 
     const p1 = patchAsar(fakeAsar);
     assert.equal(p1.ok, true);
@@ -246,6 +252,7 @@ try {
     const st1 = checkAsarStatus(fakeAsar);
     assert.equal(st1.wePatched, true);
     assert.equal(st1.zhCnPatched, true);
+    assert.equal(st1.appVersion, '2.36.0');
 
     // Check integrity hash metadata was written
     const parsed = readAsar(fakeAsar);

@@ -1,0 +1,12 @@
+{
+  "wallpaper-engine-update-guard": {
+    "enabled": true,
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node ./scripts/session-guard.mjs",
+        "timeout": 5
+      }
+    ]
+  }
+}
